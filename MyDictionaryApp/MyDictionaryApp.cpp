@@ -1,6 +1,9 @@
 ﻿#include <windows.h>
 #include <string>
 
+// Объявление функции из другого файла
+void ShowAddWordDialog(HWND hParent);
+
 // Идентификаторы для кнопок (чтобы различать их в обработчике)
 #define ID_BUTTON_ADD     1001
 #define ID_BUTTON_EDIT    1002
@@ -133,7 +136,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 // 5. Обработчики нажатий на кнопки (пока просто показывают сообщения)
 void OnButtonAdd(HWND hWnd)
 {
-    MessageBox(hWnd, L"Здесь будет окно добавления слов", L"Добавление", MB_OK);
+    ShowAddWordDialog(hWnd); // Открываем окно добавления
 }
 
 void OnButtonEdit(HWND hWnd)
