@@ -1,17 +1,20 @@
-﻿#include <windows.h>
+#define UNICODE
+#define _UNICODE
+
+#include <windows.h>
 #include <string>
 
-// Идентификаторы для элементов управления (кнопок и полей)
-#define IDC_EDIT_UNKNOWN   2001
+// Идентификаторы для элементов управления
+#define IDC_EDIT_UNKNOWN     2001
 #define IDC_EDIT_TRANSLATION 2002
-#define IDC_BUTTON_SAVE    2003
-#define IDC_BUTTON_DONE    2004
+#define IDC_BUTTON_SAVE      2003
+#define IDC_BUTTON_DONE      2004
 
 // Глобальные переменные для хранения введённых данных (пока просто для примера)
 std::wstring g_unknown;
 std::wstring g_translation;
 
-// Прототипы функций (объявляем, что они будут ниже)
+// Прототипы функций
 LRESULT CALLBACK AddWordProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 void OnSave(HWND hWnd);
 void OnDone(HWND hWnd);
@@ -26,7 +29,7 @@ void ShowAddWordDialog(HWND hParent)
         WNDCLASSEX wc = {};
         wc.cbSize = sizeof(WNDCLASSEX);
         wc.style = CS_HREDRAW | CS_VREDRAW;
-        wc.lpfnWndProc = AddWordProc;  // Указываем, что обработчик сообщений — наша функция
+        wc.lpfnWndProc = AddWordProc;
         wc.hInstance = GetModuleHandle(NULL);
         wc.hCursor = LoadCursor(NULL, IDC_ARROW);
         wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
@@ -37,13 +40,13 @@ void ShowAddWordDialog(HWND hParent)
 
     // Создаём само окно (дочернее по отношению к главному)
     HWND hWnd = CreateWindowEx(
-        0,                          // без расширенных стилей
-        L"AddWordClass",            // имя класса
-        L"Добавление слов",         // заголовок окна
-        WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, // обычное окно без изменения размера
-        CW_USEDEFAULT, CW_USEDEFAULT, // позиция X, Y (автоматическая)
-        400, 300,                   // ширина, высота
-        hParent,                    // родительское окно (главное)
+        0,
+        L"AddWordClass",
+        L"Добавление слов",
+        WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
+        CW_USEDEFAULT, CW_USEDEFAULT,
+        400, 300,
+        hParent,
         NULL, GetModuleHandle(NULL), NULL
     );
 
@@ -58,18 +61,18 @@ LRESULT CALLBACK AddWordProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
     {
     case WM_CREATE:
     {
-        // Создаём надписи (статический текст)
+        // Надписи (статический текст)
         CreateWindow(L"STATIC", L"Unknown (слово):",
             WS_CHILD | WS_VISIBLE,
-            20, 20, 120, 45,
+            20, 20, 120, 35,
             hWnd, NULL, GetModuleHandle(NULL), NULL);
 
         CreateWindow(L"STATIC", L"Translation (перевод):",
             WS_CHILD | WS_VISIBLE,
-            20, 70, 120, 45,
+            20, 70, 120, 35,
             hWnd, NULL, GetModuleHandle(NULL), NULL);
 
-        // Создаём поля для ввода текста
+        // Поля для ввода
         CreateWindow(L"EDIT", L"",
             WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL,
             150, 20, 200, 25,
@@ -80,7 +83,7 @@ LRESULT CALLBACK AddWordProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
             150, 70, 200, 25,
             hWnd, (HMENU)IDC_EDIT_TRANSLATION, GetModuleHandle(NULL), NULL);
 
-        // Создаём кнопки
+        // Кнопки
         CreateWindow(L"BUTTON", L"Подтвердить",
             WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
             80, 130, 100, 35,
@@ -137,7 +140,7 @@ void OnSave(HWND hWnd)
     g_unknown = bufferUnknown;
     g_translation = bufferTranslation;
 
-    // Показываем сообщение, что слово добавлено (временно)
+    // Показываем сообщение, что слово добавлено
     std::wstring msg = L"Слово \"" + g_unknown + L"\" добавлено!";
     MessageBox(hWnd, msg.c_str(), L"Успех", MB_OK);
 
@@ -149,6 +152,5 @@ void OnSave(HWND hWnd)
 // Обработчик кнопки "Готово"
 void OnDone(HWND hWnd)
 {
-    // Закрываем окно добавления
     DestroyWindow(hWnd);
 }

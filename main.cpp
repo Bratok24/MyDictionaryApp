@@ -1,26 +1,27 @@
-﻿#include <windows.h>
-#include <string>
+﻿#define UNICODE
+#define _UNICODE
+#include <windows.h>
 
 // Объявление функции из другого файла
 void ShowAddWordDialog(HWND hParent);
 
-// Идентификаторы для кнопок (чтобы различать их в обработчике)
+// Идентификаторы для кнопок
 #define ID_BUTTON_ADD     1001
 #define ID_BUTTON_EDIT    1002
 #define ID_BUTTON_TRAIN   1003
 #define ID_BUTTON_EXIT    1004
 
 // Прототипы функций
-LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
-void OnButtonAdd(HWND hWnd);
-void OnButtonEdit(HWND hWnd);
-void OnButtonTrain(HWND hWnd);
-void OnButtonExit(HWND hWnd);
+LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
+void OnButtonAdd(HWND);
+void OnButtonEdit(HWND);
+void OnButtonTrain(HWND);
+void OnButtonExit(HWND);
 
-// Точка входа в программу
+// Точка входа
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-    // 1. Регистрация класса окна
+    // Регистрация класса окна
     WNDCLASSEX wc = {};
     wc.cbSize = sizeof(WNDCLASSEX);
     wc.style = CS_HREDRAW | CS_VREDRAW;
@@ -36,14 +37,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         return 1;
     }
 
-    // 2. Создание окна с флагом "поверх всех окон" (WS_EX_TOPMOST)
+    // Создание окна (поверх всех окон)
     HWND hWnd = CreateWindowEx(
-        WS_EX_TOPMOST,                     
-        L"MyDictionaryClass",              
-        L"Мой словарь",                    
-        WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, 
-        CW_USEDEFAULT, CW_USEDEFAULT,      
-        400, 350,                         
+        WS_EX_TOPMOST,
+        L"MyDictionaryClass",
+        L"Мой словарь",
+        WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
+        CW_USEDEFAULT, CW_USEDEFAULT,
+        400, 350,
         NULL, NULL, hInstance, NULL
     );
 
@@ -56,7 +57,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     ShowWindow(hWnd, nCmdShow);
     UpdateWindow(hWnd);
 
-    // 3. Цикл обработки сообщений
+    // Цикл обработки сообщений
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0))
     {
@@ -67,16 +68,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     return (int)msg.wParam;
 }
 
-// 4. Оконная процедура — обрабатывает все сообщения
+// Оконная процедура
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
     {
     case WM_CREATE:
     {
-        // Создаём кнопки при создании окна
-        // Три кнопки: Добавление, Редактирование, Тренировка
-        // И кнопка "Выход"
         CreateWindow(L"BUTTON", L"Добавление слов",
             WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
             50, 40, 280, 50,
@@ -101,22 +99,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
     case WM_COMMAND:
     {
-        // Обработка нажатий на кнопки
         int wmId = LOWORD(wParam);
         switch (wmId)
         {
-        case ID_BUTTON_ADD:
-            OnButtonAdd(hWnd);
-            break;
-        case ID_BUTTON_EDIT:
-            OnButtonEdit(hWnd);
-            break;
-        case ID_BUTTON_TRAIN:
-            OnButtonTrain(hWnd);
-            break;
-        case ID_BUTTON_EXIT:
-            OnButtonExit(hWnd);
-            break;
+        case ID_BUTTON_ADD: OnButtonAdd(hWnd); break;
+        case ID_BUTTON_EDIT: OnButtonEdit(hWnd); break;
+        case ID_BUTTON_TRAIN: OnButtonTrain(hWnd); break;
+        case ID_BUTTON_EXIT: OnButtonExit(hWnd); break;
         default:
             return DefWindowProc(hWnd, message, wParam, lParam);
         }
@@ -133,24 +122,23 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
-// 5. Обработчики нажатий на кнопки (пока просто показывают сообщения)
+// Обработчики кнопок
 void OnButtonAdd(HWND hWnd)
 {
-    ShowAddWordDialog(hWnd); // Открываем окно добавления
+    ShowAddWordDialog(hWnd); // открываем окно добавления
 }
 
-void OnButtonEdit(HWND hWnd)
+void OnButtonEdit(HWND hwnd)  // ← исправлено имя!
 {
-    MessageBox(hWnd, L"Здесь будет окно редактирования слов", L"Редактирование", MB_OK);
+    MessageBox(hwnd, L"Здесь будет окно редактирования слов", L"Редактирование", MB_OK);
 }
 
-void OnButtonTrain(HWND hWnd)
+void OnButtonTrain(HWND hwnd)
 {
-    MessageBox(hWnd, L"Здесь будет окно тренировки", L"Тренировка", MB_OK);
+    MessageBox(hwnd, L"Здесь будет окно тренировки", L"Тренировка", MB_OK);
 }
 
-void OnButtonExit(HWND hWnd)
+void OnButtonExit(HWND hwnd)
 {
-    // Закрываем окно
-    PostMessage(hWnd, WM_DESTROY, 0, 0);
+    PostMessage(hwnd, WM_DESTROY, 0, 0);
 }

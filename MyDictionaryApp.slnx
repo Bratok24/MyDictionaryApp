@@ -1,7 +1,0 @@
-<Solution>
-  <Configurations>
-    <Platform Name="x64" />
-    <Platform Name="x86" />
-  </Configurations>
-  <Project Path="MyDictionaryApp/MyDictionaryApp.vcxproj" Id="8d84d507-fcca-434b-9118-201ed74815a6" />
-</Solution>
