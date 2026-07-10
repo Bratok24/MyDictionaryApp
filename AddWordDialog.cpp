@@ -3,6 +3,11 @@
 
 #include <windows.h>
 #include <string>
+#include <fstream>
+#include <vector>
+
+// Внешний вектор из main.cpp
+extern std::vector<std::pair<std::wstring, std::wstring>> g_words;
 
 // Идентификаторы для элементов управления
 #define IDC_EDIT_UNKNOWN     2001
@@ -10,7 +15,7 @@
 #define IDC_BUTTON_SAVE      2003
 #define IDC_BUTTON_DONE      2004
 
-// Глобальные переменные для хранения введённых данных (пока просто для примера)
+// Глобальные переменные 
 std::wstring g_unknown;
 std::wstring g_translation;
 
@@ -19,10 +24,19 @@ LRESULT CALLBACK AddWordProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 void OnSave(HWND hWnd);
 void OnDone(HWND hWnd);
 
+// Вспомогательная функция преобразования wstring 
+std::string WStringToUTF8(const std::wstring& wstr)
+{
+    if (wstr.empty()) return std::string();
+    int size_needed = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), (int)wstr.size(), NULL, 0, NULL, NULL);
+    std::string strTo(size_needed, 0);
+    WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), (int)wstr.size(), &strTo[0], size_needed, NULL, NULL);
+    return strTo;
+}
+
 // Функция, которая создаёт и показывает окно добавления слов
 void ShowAddWordDialog(HWND hParent)
 {
-    // Регистрируем класс окна (если ещё не зарегистрирован)
     static bool registered = false;
     if (!registered)
     {
@@ -38,7 +52,6 @@ void ShowAddWordDialog(HWND hParent)
         registered = true;
     }
 
-    // Создаём само окно (дочернее по отношению к главному)
     HWND hWnd = CreateWindowEx(
         0,
         L"AddWordClass",
@@ -61,7 +74,7 @@ LRESULT CALLBACK AddWordProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
     {
     case WM_CREATE:
     {
-        // Надписи (статический текст)
+        // Надписи
         CreateWindow(L"STATIC", L"Unknown (слово):",
             WS_CHILD | WS_VISIBLE,
             20, 20, 120, 35,
@@ -72,7 +85,7 @@ LRESULT CALLBACK AddWordProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
             20, 70, 120, 35,
             hWnd, NULL, GetModuleHandle(NULL), NULL);
 
-        // Поля для ввода
+        // Поля ввода
         CreateWindow(L"EDIT", L"",
             WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL,
             150, 20, 200, 25,
@@ -126,27 +139,52 @@ LRESULT CALLBACK AddWordProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 // Обработчик кнопки "Подтвердить"
 void OnSave(HWND hWnd)
 {
-    // Получаем текст из поля "Unknown"
-    HWND hEditUnknown = GetDlgItem(hWnd, IDC_EDIT_UNKNOWN);
+    // Читаем текст из полей
     wchar_t bufferUnknown[256] = {};
-    GetWindowText(hEditUnknown, bufferUnknown, 256);
-
-    // Получаем текст из поля "Translation"
-    HWND hEditTranslation = GetDlgItem(hWnd, IDC_EDIT_TRANSLATION);
     wchar_t bufferTranslation[256] = {};
-    GetWindowText(hEditTranslation, bufferTranslation, 256);
+    GetWindowText(GetDlgItem(hWnd, IDC_EDIT_UNKNOWN), bufferUnknown, 256);
+    GetWindowText(GetDlgItem(hWnd, IDC_EDIT_TRANSLATION), bufferTranslation, 256);
 
-    // Сохраняем в глобальные переменные (позже заменим на сохранение в файл)
-    g_unknown = bufferUnknown;
-    g_translation = bufferTranslation;
+    std::wstring unknown = bufferUnknown;
+    std::wstring translation = bufferTranslation;
 
-    // Показываем сообщение, что слово добавлено
-    std::wstring msg = L"Слово \"" + g_unknown + L"\" добавлено!";
-    MessageBox(hWnd, msg.c_str(), L"Успех", MB_OK);
+    if (unknown.empty() || translation.empty())
+    {
+        MessageBox(hWnd, L"Заполните оба поля!", L"Ошибка", MB_OK);
+        return;
+    }
 
-    // Очищаем поля для следующего ввода
-    SetWindowText(hEditUnknown, L"");
-    SetWindowText(hEditTranslation, L"");
+    // Преобразуем в UTF-8
+    std::string unknown_utf8 = WStringToUTF8(unknown);
+    std::string translation_utf8 = WStringToUTF8(translation);
+
+    // Открываем файл в режиме добавления 
+    std::ofstream file("words.txt", std::ios::app);
+    if (!file.is_open())
+    {
+        MessageBox(hWnd, L"Не удалось открыть файл для записи!", L"Ошибка", MB_OK);
+        return;
+    }
+
+    // Записываем в формате слово|перевод 
+    file << unknown_utf8 << "|" << translation_utf8 << std::endl;
+
+    if (file.fail())
+    {
+        MessageBox(hWnd, L"Ошибка при записи в файл!", L"Ошибка", MB_OK);
+        file.close();
+        return;
+    }
+
+    file.close();
+
+    // Сохраняем в глобальный вектор (для дальнейшего использования)
+    g_words.push_back({unknown, translation});
+
+    MessageBox(hWnd, L"Слово сохранено в файл!", L"Успех", MB_OK);
+
+    SetWindowText(GetDlgItem(hWnd, IDC_EDIT_UNKNOWN), L"");
+    SetWindowText(GetDlgItem(hWnd, IDC_EDIT_TRANSLATION), L"");
 }
 
 // Обработчик кнопки "Готово"
