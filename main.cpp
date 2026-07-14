@@ -2,12 +2,14 @@
 #define _UNICODE
 
 #include <windows.h>
-#include <vector>
 #include <string>
-#include <fstream>
+#include "Dictionary.h"
 
 // Объявление функции из другого файла
 void ShowAddWordDialog(HWND hParent);
+void ShowEditWordDialog(HWND hParent);
+
+Dictionary g_Dictionary;
 
 // Идентификаторы для кнопок
 #define ID_BUTTON_ADD     1001
@@ -15,47 +17,12 @@ void ShowAddWordDialog(HWND hParent);
 #define ID_BUTTON_TRAIN   1003
 #define ID_BUTTON_EXIT    1004
 
-// Глобальный вектор для хранения слов
-std::vector<std::pair<std::wstring, std::wstring>> g_words;
-
 // Прототипы функций
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 void OnButtonAdd(HWND);
 void OnButtonEdit(HWND);
 void OnButtonTrain(HWND);
 void OnButtonExit(HWND);
-
-// Преобразует UTF-8 строку в std::wstring
-std::wstring UTF8ToWString(const std::string& str)
-{
-    if (str.empty()) return std::wstring();
-    int size_needed = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), (int)str.size(), NULL, 0);
-    std::wstring wstrTo(size_needed, 0);
-    MultiByteToWideChar(CP_UTF8, 0, str.c_str(), (int)str.size(), &wstrTo[0], size_needed);
-    return wstrTo;
-}
-
-// Загружает слова из файла words.txt 
-void LoadWords()
-{
-    std::ifstream file("words.txt");
-    if (!file.is_open()) return;
-
-    std::string line;
-    while (std::getline(file, line))
-    {
-        size_t pos = line.find('|');
-        if (pos != std::string::npos)
-        {
-            std::string unknown_utf8 = line.substr(0, pos);
-            std::string translation_utf8 = line.substr(pos + 1);
-            std::wstring unknown = UTF8ToWString(unknown_utf8);
-            std::wstring translation = UTF8ToWString(translation_utf8);
-            g_words.push_back({unknown, translation});
-        }
-    }
-    file.close();
-}
 
 // Точка входа
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
@@ -76,8 +43,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         return 1;
     }
 
-    // Загружаем слова из файла
-    LoadWords();
 
     // Создание окна (поверх всех окон)
     HWND hWnd = CreateWindowEx(
@@ -172,7 +137,7 @@ void OnButtonAdd(HWND hWnd)
 
 void OnButtonEdit(HWND hWnd)
 {
-    MessageBox(hWnd, L"Здесь будет окно редактирования слов", L"Редактирование", MB_OK);
+    ShowEditWordDialog(hWnd);
 }
 
 void OnButtonTrain(HWND hWnd)

@@ -4,10 +4,10 @@
 #include <windows.h>
 #include <string>
 #include <fstream>
-#include <vector>
+#include "Dictionary.h"
 
-// Внешний вектор из main.cpp
-extern std::vector<std::pair<std::wstring, std::wstring>> g_words;
+// Глобальный объект словаря (объявлен в main.cpp)
+extern Dictionary g_Dictionary;
 
 // Идентификаторы для элементов управления
 #define IDC_EDIT_UNKNOWN     2001
@@ -15,7 +15,6 @@ extern std::vector<std::pair<std::wstring, std::wstring>> g_words;
 #define IDC_BUTTON_SAVE      2003
 #define IDC_BUTTON_DONE      2004
 
-// Глобальные переменные 
 std::wstring g_unknown;
 std::wstring g_translation;
 
@@ -23,16 +22,6 @@ std::wstring g_translation;
 LRESULT CALLBACK AddWordProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 void OnSave(HWND hWnd);
 void OnDone(HWND hWnd);
-
-// Вспомогательная функция преобразования wstring 
-std::string WStringToUTF8(const std::wstring& wstr)
-{
-    if (wstr.empty()) return std::string();
-    int size_needed = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), (int)wstr.size(), NULL, 0, NULL, NULL);
-    std::string strTo(size_needed, 0);
-    WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), (int)wstr.size(), &strTo[0], size_needed, NULL, NULL);
-    return strTo;
-}
 
 // Функция, которая создаёт и показывает окно добавления слов
 void ShowAddWordDialog(HWND hParent)
@@ -154,35 +143,12 @@ void OnSave(HWND hWnd)
         return;
     }
 
-    // Преобразуем в UTF-8
-    std::string unknown_utf8 = WStringToUTF8(unknown);
-    std::string translation_utf8 = WStringToUTF8(translation);
-
-    // Открываем файл в режиме добавления 
-    std::ofstream file("words.txt", std::ios::app);
-    if (!file.is_open())
-    {
-        MessageBox(hWnd, L"Не удалось открыть файл для записи!", L"Ошибка", MB_OK);
-        return;
-    }
-
-    // Записываем в формате слово|перевод 
-    file << unknown_utf8 << "|" << translation_utf8 << std::endl;
-
-    if (file.fail())
-    {
-        MessageBox(hWnd, L"Ошибка при записи в файл!", L"Ошибка", MB_OK);
-        file.close();
-        return;
-    }
-
-    file.close();
-
-    // Сохраняем в глобальный вектор (для дальнейшего использования)
-    g_words.push_back({unknown, translation});
+    // Сохраняем слово через класс Dictionary
+    g_Dictionary.saveWord(unknown, translation);
 
     MessageBox(hWnd, L"Слово сохранено в файл!", L"Успех", MB_OK);
 
+    // Очищаем поля ввода
     SetWindowText(GetDlgItem(hWnd, IDC_EDIT_UNKNOWN), L"");
     SetWindowText(GetDlgItem(hWnd, IDC_EDIT_TRANSLATION), L"");
 }
