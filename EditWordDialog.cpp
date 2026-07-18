@@ -21,7 +21,7 @@ HWND g_hList = NULL;
 HWND g_hEditUnknown = NULL;
 HWND g_hEditTranslation = NULL;
 
-// Прототипы (переименованные функции)
+// Прототипы
 LRESULT CALLBACK EditWordProc(HWND, UINT, WPARAM, LPARAM);
 void FillList();
 void OnEditSelect(HWND hWnd);
@@ -89,7 +89,7 @@ LRESULT CALLBACK EditWordProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 
         CreateWindow(L"STATIC", L"Translation (перевод):",
             WS_CHILD | WS_VISIBLE,
-            240, 90, 120, 55,
+            240, 90, 120, 25,
             hWnd, NULL, GetModuleHandle(NULL), NULL);
 
         g_hEditTranslation = CreateWindow(L"EDIT", L"",
@@ -150,7 +150,8 @@ void FillList()
     const auto& words = g_Dictionary.getAllWords();
     for (size_t i = 0; i < words.size(); ++i)
     {
-        std::wstring item = words[i].first + L" — " + words[i].second;
+        // Используем поля unknown и translation
+        std::wstring item = words[i].unknown + L" — " + words[i].translation;
         SendMessageW(g_hList, LB_ADDSTRING, 0, (LPARAM)item.c_str());
     }
 }
@@ -162,8 +163,8 @@ void OnEditSelect(HWND hWnd)
     const auto& words = g_Dictionary.getAllWords();
     if (index >= 0 && index < (int)words.size())
     {
-        SetWindowText(g_hEditUnknown, words[index].first.c_str());
-        SetWindowText(g_hEditTranslation, words[index].second.c_str());
+        SetWindowText(g_hEditUnknown, words[index].unknown.c_str());
+        SetWindowText(g_hEditTranslation, words[index].translation.c_str());
     }
 }
 

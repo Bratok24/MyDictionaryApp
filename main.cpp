@@ -8,6 +8,7 @@
 // Объявление функции из другого файла
 void ShowAddWordDialog(HWND hParent);
 void ShowEditWordDialog(HWND hParent);
+void ShowTrainDialog(HWND hParent);
 
 Dictionary g_Dictionary;
 
@@ -142,7 +143,7 @@ void OnButtonEdit(HWND hWnd)
 
 void OnButtonTrain(HWND hWnd)
 {
-    MessageBox(hWnd, L"Здесь будет окно тренировки", L"Тренировка", MB_OK);
+    ShowTrainDialog(hWnd);
 }
 
 void OnButtonExit(HWND hWnd)
