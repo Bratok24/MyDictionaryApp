@@ -5,11 +5,12 @@
 #include <string>
 #include "Dictionary.h"
 
-// Объявление функции из другого файла
+// Объявление функций из других файлов
 void ShowAddWordDialog(HWND hParent);
 void ShowEditWordDialog(HWND hParent);
 void ShowTrainDialog(HWND hParent);
 
+// Глобальный объект словаря
 Dictionary g_Dictionary;
 
 // Идентификаторы для кнопок
@@ -28,7 +29,6 @@ void OnButtonExit(HWND);
 // Точка входа
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-    // Регистрация класса окна
     WNDCLASSEX wc = {};
     wc.cbSize = sizeof(WNDCLASSEX);
     wc.style = CS_HREDRAW | CS_VREDRAW;
@@ -43,9 +43,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         MessageBox(NULL, L"Не удалось зарегистрировать класс окна!", L"Ошибка", MB_ICONERROR);
         return 1;
     }
-
-
-    // Создание окна (поверх всех окон)
+    // Создаём окно поверх всех окон
     HWND hWnd = CreateWindowEx(
         WS_EX_TOPMOST,
         L"MyDictionaryClass",
@@ -65,7 +63,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     ShowWindow(hWnd, nCmdShow);
     UpdateWindow(hWnd);
 
-    // Цикл обработки сообщений
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0))
     {
@@ -76,13 +73,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     return (int)msg.wParam;
 }
 
-// Оконная процедура
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
     {
     case WM_CREATE:
     {
+        //при создании окна рисуем все кнопки
         CreateWindow(L"BUTTON", L"Добавление слов",
             WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
             50, 40, 280, 50,
@@ -102,35 +99,56 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
             50, 250, 280, 50,
             hWnd, (HMENU)ID_BUTTON_EXIT, GetModuleHandle(NULL), NULL);
+        break;
     }
-    break;
 
     case WM_COMMAND:
     {
         int wmId = LOWORD(wParam);
         switch (wmId)
         {
-        case ID_BUTTON_ADD: OnButtonAdd(hWnd); break;
-        case ID_BUTTON_EDIT: OnButtonEdit(hWnd); break;
-        case ID_BUTTON_TRAIN: OnButtonTrain(hWnd); break;
-        case ID_BUTTON_EXIT: OnButtonExit(hWnd); break;
+        case ID_BUTTON_ADD:
+        {
+            OnButtonAdd(hWnd);
+            break;
+        }
+        case ID_BUTTON_EDIT:
+        {
+            OnButtonEdit(hWnd);
+            break;
+        }
+        case ID_BUTTON_TRAIN:
+        {
+            OnButtonTrain(hWnd);
+            break;
+        }
+        case ID_BUTTON_EXIT:
+        {
+            OnButtonExit(hWnd);
+            break;
+        }
         default:
+        {
             return DefWindowProc(hWnd, message, wParam, lParam);
         }
+        }
+        break;
     }
-    break;
 
     case WM_DESTROY:
+    {
         PostQuitMessage(0);
         break;
+    }
 
     default:
+    {
         return DefWindowProc(hWnd, message, wParam, lParam);
+    }
     }
     return 0;
 }
 
-// Обработчики кнопок
 void OnButtonAdd(HWND hWnd)
 {
     ShowAddWordDialog(hWnd);

@@ -7,22 +7,24 @@
 
 extern Dictionary g_Dictionary;
 
-// Идентификаторы элементов
 #define IDC_TEXT_WORD       4001
 #define IDC_BUTTON_CHECK    4002
 #define IDC_BUTTON_CORRECT  4003
 #define IDC_BUTTON_WRONG    4004
 #define IDC_BUTTON_FINISH   4005
 
-// Глобальные указатели
 HWND g_hTrainWnd = NULL;
 HWND g_hTextWord = NULL;
 HWND g_hButtonCheck = NULL;
 HWND g_hButtonCorrect = NULL;
 HWND g_hButtonWrong = NULL;
 
-int g_currentIndex = -1;          // индекс текущего слова
-bool g_isChecked = false;         // проверено ли текущее слово
+int g_currentIndex = -1; //индекс текущего слова
+bool g_isChecked = false; //проверено ли уже текущее слово
+
+// Статистика за сессию
+int g_sessionCorrect = 0;
+int g_sessionWrong = 0;
 
 LRESULT CALLBACK TrainProc(HWND, UINT, WPARAM, LPARAM);
 void ShowNewWord();
@@ -31,7 +33,7 @@ void OnCorrect(HWND hWnd);
 void OnWrong(HWND hWnd);
 void OnFinish(HWND hWnd);
 
-// Функция показа окна тренировки
+//Создание и показ окна тренировки
 void ShowTrainDialog(HWND hParent)
 {
     static bool registered = false;
@@ -70,20 +72,19 @@ LRESULT CALLBACK TrainProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
     case WM_CREATE:
     {
         g_hTrainWnd = hWnd;
+        g_sessionCorrect = 0;
+        g_sessionWrong = 0;
 
-        // Создаём статический текст для отображения слова
         g_hTextWord = CreateWindow(L"STATIC", L"",
             WS_CHILD | WS_VISIBLE | SS_CENTER,
             50, 30, 300, 50,
             hWnd, (HMENU)IDC_TEXT_WORD, GetModuleHandle(NULL), NULL);
 
-        // Кнопка "Проверить"
         g_hButtonCheck = CreateWindow(L"BUTTON", L"Проверить",
             WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
             150, 100, 100, 35,
             hWnd, (HMENU)IDC_BUTTON_CHECK, GetModuleHandle(NULL), NULL);
 
-        // Кнопки "Верно" и "Неверно" (пока скрыты)
         g_hButtonCorrect = CreateWindow(L"BUTTON", L"Верно",
             WS_CHILD | BS_PUSHBUTTON,
             80, 160, 100, 35,
@@ -94,42 +95,62 @@ LRESULT CALLBACK TrainProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
             220, 160, 100, 35,
             hWnd, (HMENU)IDC_BUTTON_WRONG, GetModuleHandle(NULL), NULL);
 
-        // Кнопка "Финиш"
         CreateWindow(L"BUTTON", L"Финиш",
             WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
             150, 220, 100, 35,
             hWnd, (HMENU)IDC_BUTTON_FINISH, GetModuleHandle(NULL), NULL);
 
-        // Показываем первое слово
-        ShowNewWord();
+        ShowNewWord(); //показать первое случайное слово
+        break;
     }
-    break;
 
     case WM_COMMAND:
     {
         int wmId = LOWORD(wParam);
         switch (wmId)
         {
-        case IDC_BUTTON_CHECK:  OnCheck(hWnd); break;
-        case IDC_BUTTON_CORRECT: OnCorrect(hWnd); break;
-        case IDC_BUTTON_WRONG:  OnWrong(hWnd); break;
-        case IDC_BUTTON_FINISH: OnFinish(hWnd); break;
-        default: return DefWindowProc(hWnd, message, wParam, lParam);
+        case IDC_BUTTON_CHECK:
+        {
+            OnCheck(hWnd);
+            break;
         }
+        case IDC_BUTTON_CORRECT:
+        {
+            OnCorrect(hWnd);
+            break;
+        }
+        case IDC_BUTTON_WRONG:
+        {
+            OnWrong(hWnd);
+            break;
+        }
+        case IDC_BUTTON_FINISH:
+        {
+            OnFinish(hWnd);
+            break;
+        }
+        default:
+        {
+            return DefWindowProc(hWnd, message, wParam, lParam);
+        }
+        }
+        break;
     }
-    break;
 
     case WM_CLOSE:
+    {
         DestroyWindow(hWnd);
         break;
+    }
 
     default:
+    {
         return DefWindowProc(hWnd, message, wParam, lParam);
+    }
     }
     return 0;
 }
-
-// Показывает новое случайное слово
+//показать новое случайное слово
 void ShowNewWord()
 {
     g_currentIndex = g_Dictionary.getRandomWordIndex();
@@ -148,52 +169,49 @@ void ShowNewWord()
     std::wstring word = words[g_currentIndex].unknown;
     SetWindowText(g_hTextWord, word.c_str());
 
-    // Показываем кнопку "Проверить", скрываем "Верно"/"Неверно"
     ShowWindow(g_hButtonCheck, SW_SHOW);
     ShowWindow(g_hButtonCorrect, SW_HIDE);
     ShowWindow(g_hButtonWrong, SW_HIDE);
-
-    // Делаем кнопку "Проверить" доступной
     EnableWindow(g_hButtonCheck, TRUE);
 }
-
-// Обработчик кнопки "Проверить"
+//Обработчик "Проверить"
 void OnCheck(HWND hWnd)
 {
     if (g_currentIndex == -1) return;
-    if (g_isChecked) return; // уже проверено
+    if (g_isChecked) return;
 
+    // Показываем правильный перевод
     auto& words = g_Dictionary.getAllWords();
     std::wstring translation = words[g_currentIndex].translation;
     std::wstring msg = L"Правильный перевод: " + translation;
     MessageBox(hWnd, msg.c_str(), L"Проверка", MB_OK);
 
     g_isChecked = true;
-
-    // Скрываем кнопку "Проверить", показываем "Верно" и "Неверно"
     ShowWindow(g_hButtonCheck, SW_HIDE);
     ShowWindow(g_hButtonCorrect, SW_SHOW);
     ShowWindow(g_hButtonWrong, SW_SHOW);
 }
-
-// Обработчик кнопки "Верно"
+//Обработчик "Верно"
 void OnCorrect(HWND hWnd)
 {
     if (g_currentIndex == -1) return;
     g_Dictionary.markCorrect(g_currentIndex);
+    g_sessionCorrect++;
     ShowNewWord();
 }
-
-// Обработчик кнопки "Неверно"
+//Обработчик "Неверно"
 void OnWrong(HWND hWnd)
 {
     if (g_currentIndex == -1) return;
     g_Dictionary.markWrong(g_currentIndex);
+    g_sessionWrong++;
     ShowNewWord();
 }
-
-// Обработчик кнопки "Финиш"
+//Обработчик "Финиш"
 void OnFinish(HWND hWnd)
 {
+    std::wstring msg = L"Сессия завершена!\nВерно: " + std::to_wstring(g_sessionCorrect) +
+                       L"\nНеверно: " + std::to_wstring(g_sessionWrong);
+    MessageBox(hWnd, msg.c_str(), L"Статистика", MB_OK);
     DestroyWindow(hWnd);
 }

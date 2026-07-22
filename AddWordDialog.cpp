@@ -6,10 +6,8 @@
 #include <fstream>
 #include "Dictionary.h"
 
-// Глобальный объект словаря (объявлен в main.cpp)
 extern Dictionary g_Dictionary;
 
-// Идентификаторы для элементов управления
 #define IDC_EDIT_UNKNOWN     2001
 #define IDC_EDIT_TRANSLATION 2002
 #define IDC_BUTTON_SAVE      2003
@@ -18,12 +16,11 @@ extern Dictionary g_Dictionary;
 std::wstring g_unknown;
 std::wstring g_translation;
 
-// Прототипы функций
 LRESULT CALLBACK AddWordProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 void OnSave(HWND hWnd);
 void OnDone(HWND hWnd);
 
-// Функция, которая создаёт и показывает окно добавления слов
+//Создание и показ окна добавления
 void ShowAddWordDialog(HWND hParent)
 {
     static bool registered = false;
@@ -40,7 +37,7 @@ void ShowAddWordDialog(HWND hParent)
         RegisterClassEx(&wc);
         registered = true;
     }
-
+    //Создаём окно (дочернее по отношению к главному)
     HWND hWnd = CreateWindowEx(
         0,
         L"AddWordClass",
@@ -56,14 +53,12 @@ void ShowAddWordDialog(HWND hParent)
     UpdateWindow(hWnd);
 }
 
-// Оконная процедура для окна добавления
 LRESULT CALLBACK AddWordProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
     {
     case WM_CREATE:
     {
-        // Надписи
         CreateWindow(L"STATIC", L"Unknown (слово):",
             WS_CHILD | WS_VISIBLE,
             20, 20, 120, 35,
@@ -74,7 +69,6 @@ LRESULT CALLBACK AddWordProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
             20, 70, 120, 35,
             hWnd, NULL, GetModuleHandle(NULL), NULL);
 
-        // Поля ввода
         CreateWindow(L"EDIT", L"",
             WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL,
             150, 20, 200, 25,
@@ -85,7 +79,6 @@ LRESULT CALLBACK AddWordProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
             150, 70, 200, 25,
             hWnd, (HMENU)IDC_EDIT_TRANSLATION, GetModuleHandle(NULL), NULL);
 
-        // Кнопки
         CreateWindow(L"BUTTON", L"Подтвердить",
             WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
             80, 130, 100, 35,
@@ -95,8 +88,8 @@ LRESULT CALLBACK AddWordProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
             WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
             220, 130, 100, 35,
             hWnd, (HMENU)IDC_BUTTON_DONE, GetModuleHandle(NULL), NULL);
+        break;
     }
-    break;
 
     case WM_COMMAND:
     {
@@ -104,31 +97,40 @@ LRESULT CALLBACK AddWordProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
         switch (wmId)
         {
         case IDC_BUTTON_SAVE:
+        {
             OnSave(hWnd);
             break;
+        }
         case IDC_BUTTON_DONE:
+        {
             OnDone(hWnd);
             break;
+        }
         default:
+        {
             return DefWindowProc(hWnd, message, wParam, lParam);
         }
+        }
+        break;
     }
-    break;
 
     case WM_CLOSE:
+    {
         DestroyWindow(hWnd);
         break;
+    }
 
     default:
+    {
         return DefWindowProc(hWnd, message, wParam, lParam);
+    }
     }
     return 0;
 }
 
-// Обработчик кнопки "Подтвердить"
 void OnSave(HWND hWnd)
 {
-    // Читаем текст из полей
+    //Читаем текст из полей ввода
     wchar_t bufferUnknown[256] = {};
     wchar_t bufferTranslation[256] = {};
     GetWindowText(GetDlgItem(hWnd, IDC_EDIT_UNKNOWN), bufferUnknown, 256);
@@ -142,18 +144,14 @@ void OnSave(HWND hWnd)
         MessageBox(hWnd, L"Заполните оба поля!", L"Ошибка", MB_OK);
         return;
     }
-
-    // Сохраняем слово через класс Dictionary
+    //Сохраняем через класс Dictionary
     g_Dictionary.saveWord(unknown, translation);
-
     MessageBox(hWnd, L"Слово сохранено в файл!", L"Успех", MB_OK);
 
-    // Очищаем поля ввода
     SetWindowText(GetDlgItem(hWnd, IDC_EDIT_UNKNOWN), L"");
     SetWindowText(GetDlgItem(hWnd, IDC_EDIT_TRANSLATION), L"");
 }
 
-// Обработчик кнопки "Готово"
 void OnDone(HWND hWnd)
 {
     DestroyWindow(hWnd);

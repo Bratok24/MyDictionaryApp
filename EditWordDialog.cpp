@@ -15,13 +15,11 @@ extern Dictionary g_Dictionary;
 #define IDC_BUTTON_DELETE   3005
 #define IDC_BUTTON_DONE     3006
 
-// Глобальные указатели на элементы окна
 HWND g_hEditWnd = NULL;
 HWND g_hList = NULL;
 HWND g_hEditUnknown = NULL;
 HWND g_hEditTranslation = NULL;
 
-// Прототипы
 LRESULT CALLBACK EditWordProc(HWND, UINT, WPARAM, LPARAM);
 void FillList();
 void OnEditSelect(HWND hWnd);
@@ -29,6 +27,7 @@ void OnEditSave(HWND hWnd);
 void OnEditDelete(HWND hWnd);
 void OnEditDone(HWND hWnd);
 
+//Создание и показ окна редактирования
 void ShowEditWordDialog(HWND hParent)
 {
     static bool registered = false;
@@ -67,16 +66,14 @@ LRESULT CALLBACK EditWordProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
     case WM_CREATE:
     {
         g_hEditWnd = hWnd;
-
-        // Список слов
+        //Список всех слов
         g_hList = CreateWindow(L"LISTBOX", L"",
             WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | LBS_NOTIFY,
             20, 20, 200, 200,
             hWnd, (HMENU)IDC_LIST_WORDS, GetModuleHandle(NULL), NULL);
 
         FillList();
-
-        // Надписи и поля
+        // Поля для редактирования
         CreateWindow(L"STATIC", L"Unknown (слово):",
             WS_CHILD | WS_VISIBLE,
             240, 20, 120, 25,
@@ -89,7 +86,7 @@ LRESULT CALLBACK EditWordProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 
         CreateWindow(L"STATIC", L"Translation (перевод):",
             WS_CHILD | WS_VISIBLE,
-            240, 90, 120, 25,
+            240, 90, 120, 55,
             hWnd, NULL, GetModuleHandle(NULL), NULL);
 
         g_hEditTranslation = CreateWindow(L"EDIT", L"",
@@ -97,7 +94,6 @@ LRESULT CALLBACK EditWordProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
             240, 120, 200, 25,
             hWnd, (HMENU)IDC_EDIT_TRANSLATION, GetModuleHandle(NULL), NULL);
 
-        // Кнопки
         CreateWindow(L"BUTTON", L"Подтвердить",
             WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
             240, 180, 90, 35,
@@ -112,8 +108,8 @@ LRESULT CALLBACK EditWordProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
             WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
             300, 240, 90, 35,
             hWnd, (HMENU)IDC_BUTTON_DONE, GetModuleHandle(NULL), NULL);
+        break;
     }
-    break;
 
     case WM_COMMAND:
     {
@@ -125,24 +121,43 @@ LRESULT CALLBACK EditWordProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         }
         else switch (wmId)
         {
-        case IDC_BUTTON_SAVE:   OnEditSave(hWnd); break;
-        case IDC_BUTTON_DELETE: OnEditDelete(hWnd); break;
-        case IDC_BUTTON_DONE:   OnEditDone(hWnd); break;
-        default: return DefWindowProc(hWnd, message, wParam, lParam);
+        case IDC_BUTTON_SAVE:
+        {
+            OnEditSave(hWnd);
+            break;
         }
+        case IDC_BUTTON_DELETE:
+        {
+            OnEditDelete(hWnd);
+            break;
+        }
+        case IDC_BUTTON_DONE:
+        {
+            OnEditDone(hWnd);
+            break;
+        }
+        default:
+        {
+            return DefWindowProc(hWnd, message, wParam, lParam);
+        }
+        }
+        break;
     }
-    break;
 
     case WM_CLOSE:
+    {
         DestroyWindow(hWnd);
         break;
+    }
 
     default:
+    {
         return DefWindowProc(hWnd, message, wParam, lParam);
+    }
     }
     return 0;
 }
-
+//Заполнить список словами из словаря
 void FillList()
 {
     if (!g_hList) return;
@@ -150,12 +165,11 @@ void FillList()
     const auto& words = g_Dictionary.getAllWords();
     for (size_t i = 0; i < words.size(); ++i)
     {
-        // Используем поля unknown и translation
         std::wstring item = words[i].unknown + L" — " + words[i].translation;
         SendMessageW(g_hList, LB_ADDSTRING, 0, (LPARAM)item.c_str());
     }
 }
-
+//При выборе слова из списка — подставить его в поля
 void OnEditSelect(HWND hWnd)
 {
     int index = (int)SendMessage(g_hList, LB_GETCURSEL, 0, 0);
@@ -167,7 +181,7 @@ void OnEditSelect(HWND hWnd)
         SetWindowText(g_hEditTranslation, words[index].translation.c_str());
     }
 }
-
+//Обработчик "Подтвердить"
 void OnEditSave(HWND hWnd)
 {
     int index = (int)SendMessage(g_hList, LB_GETCURSEL, 0, 0);
@@ -197,7 +211,7 @@ void OnEditSave(HWND hWnd)
     SetWindowText(g_hEditTranslation, L"");
     MessageBox(hWnd, L"Изменения сохранены!", L"Успех", MB_OK);
 }
-
+// Обработчик "Удалить"
 void OnEditDelete(HWND hWnd)
 {
     int index = (int)SendMessage(g_hList, LB_GETCURSEL, 0, 0);
