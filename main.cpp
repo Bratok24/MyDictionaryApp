@@ -5,21 +5,18 @@
 #include <string>
 #include "Dictionary.h"
 
-// Объявление функций из других файлов
+// Объявления функций из других файлов
 void ShowAddWordDialog(HWND hParent);
 void ShowEditWordDialog(HWND hParent);
 void ShowTrainDialog(HWND hParent);
 
-// Глобальный объект словаря
 Dictionary g_Dictionary;
 
-// Идентификаторы для кнопок
 #define ID_BUTTON_ADD     1001
 #define ID_BUTTON_EDIT    1002
 #define ID_BUTTON_TRAIN   1003
 #define ID_BUTTON_EXIT    1004
 
-// Прототипы функций
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 void OnButtonAdd(HWND);
 void OnButtonEdit(HWND);
@@ -29,13 +26,14 @@ void OnButtonExit(HWND);
 // Точка входа
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
+    // Регистрируем класс главного окна
     WNDCLASSEX wc = {};
     wc.cbSize = sizeof(WNDCLASSEX);
     wc.style = CS_HREDRAW | CS_VREDRAW;
     wc.lpfnWndProc = WndProc;
     wc.hInstance = hInstance;
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-    wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+    wc.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_WINDOW + 1);
     wc.lpszClassName = L"MyDictionaryClass";
 
     if (!RegisterClassEx(&wc))
@@ -43,7 +41,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         MessageBox(NULL, L"Не удалось зарегистрировать класс окна!", L"Ошибка", MB_ICONERROR);
         return 1;
     }
-    // Создаём окно поверх всех окон
+    
+    // Создаём окно поверх всех окон 
     HWND hWnd = CreateWindowEx(
         WS_EX_TOPMOST,
         L"MyDictionaryClass",
@@ -70,7 +69,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         DispatchMessage(&msg);
     }
 
-    return (int)msg.wParam;
+    return static_cast<int>(msg.wParam);
 }
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -79,31 +78,32 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
     case WM_CREATE:
     {
-        //при создании окна рисуем все кнопки
+        // При создании окна рисуем все кнопки
         CreateWindow(L"BUTTON", L"Добавление слов",
             WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
             50, 40, 280, 50,
-            hWnd, (HMENU)ID_BUTTON_ADD, GetModuleHandle(NULL), NULL);
+            hWnd, reinterpret_cast<HMENU>(ID_BUTTON_ADD), GetModuleHandle(NULL), NULL);
 
         CreateWindow(L"BUTTON", L"Редактирование слов",
             WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
             50, 110, 280, 50,
-            hWnd, (HMENU)ID_BUTTON_EDIT, GetModuleHandle(NULL), NULL);
+            hWnd, reinterpret_cast<HMENU>(ID_BUTTON_EDIT), GetModuleHandle(NULL), NULL);
 
         CreateWindow(L"BUTTON", L"Тренировка",
             WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
             50, 180, 280, 50,
-            hWnd, (HMENU)ID_BUTTON_TRAIN, GetModuleHandle(NULL), NULL);
+            hWnd, reinterpret_cast<HMENU>(ID_BUTTON_TRAIN), GetModuleHandle(NULL), NULL);
 
         CreateWindow(L"BUTTON", L"Выход",
             WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
             50, 250, 280, 50,
-            hWnd, (HMENU)ID_BUTTON_EXIT, GetModuleHandle(NULL), NULL);
+            hWnd, reinterpret_cast<HMENU>(ID_BUTTON_EXIT), GetModuleHandle(NULL), NULL);
         break;
     }
 
     case WM_COMMAND:
     {
+        // Обработка нажатий на кнопки
         int wmId = LOWORD(wParam);
         switch (wmId)
         {

@@ -19,7 +19,7 @@ HWND g_hButtonCheck = NULL;
 HWND g_hButtonCorrect = NULL;
 HWND g_hButtonWrong = NULL;
 
-int g_currentIndex = -1; //индекс текущего слова
+int g_currentIndex = -1; // индекс текущего слова
 bool g_isChecked = false; //проверено ли уже текущее слово
 
 // Статистика за сессию
@@ -28,12 +28,12 @@ int g_sessionWrong = 0;
 
 LRESULT CALLBACK TrainProc(HWND, UINT, WPARAM, LPARAM);
 void ShowNewWord();
-void OnCheck(HWND hWnd);
-void OnCorrect(HWND hWnd);
-void OnWrong(HWND hWnd);
-void OnFinish(HWND hWnd);
+void OnCheck(HWND);
+void OnCorrect(HWND);
+void OnWrong(HWND);
+void OnFinish(HWND);
 
-//Создание и показ окна тренировки
+// Создание и показ окна тренировки
 void ShowTrainDialog(HWND hParent)
 {
     static bool registered = false;
@@ -45,7 +45,7 @@ void ShowTrainDialog(HWND hParent)
         wc.lpfnWndProc = TrainProc;
         wc.hInstance = GetModuleHandle(NULL);
         wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-        wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+        wc.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_WINDOW + 1);
         wc.lpszClassName = L"TrainClass";
         RegisterClassEx(&wc);
         registered = true;
@@ -78,29 +78,29 @@ LRESULT CALLBACK TrainProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
         g_hTextWord = CreateWindow(L"STATIC", L"",
             WS_CHILD | WS_VISIBLE | SS_CENTER,
             50, 30, 300, 50,
-            hWnd, (HMENU)IDC_TEXT_WORD, GetModuleHandle(NULL), NULL);
+            hWnd, reinterpret_cast<HMENU>(IDC_TEXT_WORD), GetModuleHandle(NULL), NULL);
 
         g_hButtonCheck = CreateWindow(L"BUTTON", L"Проверить",
             WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
             150, 100, 100, 35,
-            hWnd, (HMENU)IDC_BUTTON_CHECK, GetModuleHandle(NULL), NULL);
+            hWnd, reinterpret_cast<HMENU>(IDC_BUTTON_CHECK), GetModuleHandle(NULL), NULL);
 
         g_hButtonCorrect = CreateWindow(L"BUTTON", L"Верно",
             WS_CHILD | BS_PUSHBUTTON,
             80, 160, 100, 35,
-            hWnd, (HMENU)IDC_BUTTON_CORRECT, GetModuleHandle(NULL), NULL);
+            hWnd, reinterpret_cast<HMENU>(IDC_BUTTON_CORRECT), GetModuleHandle(NULL), NULL);
 
         g_hButtonWrong = CreateWindow(L"BUTTON", L"Неверно",
             WS_CHILD | BS_PUSHBUTTON,
             220, 160, 100, 35,
-            hWnd, (HMENU)IDC_BUTTON_WRONG, GetModuleHandle(NULL), NULL);
+            hWnd, reinterpret_cast<HMENU>(IDC_BUTTON_WRONG), GetModuleHandle(NULL), NULL);
 
         CreateWindow(L"BUTTON", L"Финиш",
             WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
             150, 220, 100, 35,
-            hWnd, (HMENU)IDC_BUTTON_FINISH, GetModuleHandle(NULL), NULL);
+            hWnd, reinterpret_cast<HMENU>(IDC_BUTTON_FINISH), GetModuleHandle(NULL), NULL);
 
-        ShowNewWord(); //показать первое случайное слово
+        ShowNewWord();
         break;
     }
 
@@ -150,7 +150,8 @@ LRESULT CALLBACK TrainProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam
     }
     return 0;
 }
-//показать новое случайное слово
+
+// Показать новое случайное слово
 void ShowNewWord()
 {
     g_currentIndex = g_Dictionary.getRandomWordIndex();
@@ -174,13 +175,12 @@ void ShowNewWord()
     ShowWindow(g_hButtonWrong, SW_HIDE);
     EnableWindow(g_hButtonCheck, TRUE);
 }
-//Обработчик "Проверить"
+// Обработчик "Проверить"
 void OnCheck(HWND hWnd)
 {
     if (g_currentIndex == -1) return;
     if (g_isChecked) return;
 
-    // Показываем правильный перевод
     auto& words = g_Dictionary.getAllWords();
     std::wstring translation = words[g_currentIndex].translation;
     std::wstring msg = L"Правильный перевод: " + translation;
@@ -191,7 +191,7 @@ void OnCheck(HWND hWnd)
     ShowWindow(g_hButtonCorrect, SW_SHOW);
     ShowWindow(g_hButtonWrong, SW_SHOW);
 }
-//Обработчик "Верно"
+// Обработчик "Верно"
 void OnCorrect(HWND hWnd)
 {
     if (g_currentIndex == -1) return;
@@ -199,7 +199,7 @@ void OnCorrect(HWND hWnd)
     g_sessionCorrect++;
     ShowNewWord();
 }
-//Обработчик "Неверно"
+// Обработчик "Неверно"
 void OnWrong(HWND hWnd)
 {
     if (g_currentIndex == -1) return;
@@ -207,9 +207,10 @@ void OnWrong(HWND hWnd)
     g_sessionWrong++;
     ShowNewWord();
 }
-//Обработчик "Финиш"
+// Обработчик "Финиш" 
 void OnFinish(HWND hWnd)
 {
+    // Показываем статистику за сессию
     std::wstring msg = L"Сессия завершена!\nВерно: " + std::to_wstring(g_sessionCorrect) +
                        L"\nНеверно: " + std::to_wstring(g_sessionWrong);
     MessageBox(hWnd, msg.c_str(), L"Статистика", MB_OK);
